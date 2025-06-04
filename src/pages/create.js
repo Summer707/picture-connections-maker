@@ -135,11 +135,11 @@ export default function CreatePage() {
 
         {/* Group Names Input */}
         <div className="mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg">
-          <h2 className="text-lg font-semibold mb-4">Name Your Groups</h2>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">Name Your Groups</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {groupNames.map((name, index) => (
               <div key={index} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-900">
                   Group {String.fromCharCode(65 + index)}
                 </label>
                 <input
@@ -147,7 +147,7 @@ export default function CreatePage() {
                   value={name}
                   onChange={(e) => handleGroupNameChange(index, e.target.value)}
                   placeholder={`Enter group ${index + 1} name`}
-                  className="w-full p-2 border rounded text-sm"
+                  className="w-full p-2 border rounded text-sm text-gray-900 placeholder-gray-500"
                 />
               </div>
             ))}
@@ -159,8 +159,8 @@ export default function CreatePage() {
           className="border-2 border-dashed p-6 rounded-lg mb-6 cursor-pointer bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors text-center shadow-lg"
         >
           <input {...getInputProps()} />
-          <p className="text-gray-600">Drag and drop images here, or click to select (up to 16)</p>
-          <p className="text-sm text-gray-500 mt-2">Upload 4 images for each group in order</p>
+          <p className="text-gray-900">Drag and drop images here, or click to select (up to 16)</p>
+          <p className="text-sm text-gray-700 mt-2">Upload 4 images for each group in order</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -172,7 +172,7 @@ export default function CreatePage() {
               <div key={img.id} className="bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-lg">
                 <div className="relative aspect-[3/2] mb-2">
                   <img src={img.preview} alt="preview" className="w-full h-full object-cover rounded" />
-                  <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                     {groupName}
                   </div>
                 </div>
