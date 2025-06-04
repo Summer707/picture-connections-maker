@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "../../lib/supabase";
+import Image from "next/image";
 
 const defaultGroupColors = {
   "Group A": "#F3DE7D",
@@ -121,7 +122,7 @@ export default function PlayPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
-          Summer's Connections
+          Summer&apos;s Connections
         </h1>
 
         {loading && (
@@ -159,25 +160,29 @@ export default function PlayPage() {
                     ${isSelected ? 'ring-4 ring-purple-500' : ''}
                     ${isSolved ? 'ring-4 ring-opacity-50' : ''}
                     transform hover:scale-105 duration-200
+                    relative
                   `}
                   style={{ 
                     backgroundColor: bg,
-                    position: "relative",
                     aspectRatio: "3/2"
                   }}
                 >
-                  <img
-                    src={tile.url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error("Image failed to load:", tile.url);
-                      e.target.style.display = 'none';
-                    }}
-                  />
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={tile.url}
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 25vw, 20vw"
+                      className="object-cover"
+                      onError={(e) => {
+                        console.error("Image failed to load:", tile.url);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
                   {isSolved && (
                     <div 
-                      className="absolute bottom-2 right-2 text-xs font-bold px-3 py-1 rounded-full shadow-md"
+                      className="absolute bottom-2 right-2 text-xs font-bold px-3 py-1 rounded-full shadow-md z-10"
                       style={{ 
                         backgroundColor: `${groupColors[isSolved]}99`,
                         color: '#000000',
@@ -199,7 +204,7 @@ export default function PlayPage() {
               🎉 Congratulations!
             </div>
             <div className="text-xl text-gray-600">
-              You've solved all the connections!
+              You&apos;ve solved all the connections!
             </div>
           </div>
         )}
