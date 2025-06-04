@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 
 export default function CreatePage() {
   const [images, setImages] = useState([]);
-  const [groupAssignments, setGroupAssignments] = useState({});
   const [saving, setSaving] = useState(false);
   const [groupNames, setGroupNames] = useState(['', '', '', '']);
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function CreatePage() {
         id: uuidv4(),
         file,
         preview: URL.createObjectURL(file),
-        defaultGroup: groupName,
+        group_name: groupName,
       };
     });
 
@@ -33,23 +32,21 @@ export default function CreatePage() {
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop, accept: { "image/*": [] } });
 
-  const assignGroup = (id, group) => {
-    setGroupAssignments((prev) => ({ ...prev, [id]: group }));
-  };
-
   const handleGroupNameChange = (index, value) => {
     const newGroupNames = [...groupNames];
     newGroupNames[index] = value;
     setGroupNames(newGroupNames);
 
-    // Update default groups for images that haven't been manually assigned
-    setImages(prev => prev.map(img => {
-      if (groupAssignments[img.id]) return img; // Skip manually assigned images
-      const groupIndex = Math.floor(prev.indexOf(img) / 4);
-      return {
-        ...img,
-        defaultGroup: newGroupNames[groupIndex] || `Group ${String.fromCharCode(65 + groupIndex)}`
-      };
+    // Update group names for images in this group
+    setImages(prev => prev.map((img, i) => {
+      const groupIndex = Math.floor(i / 4);
+      if (groupIndex === index) {
+        return {
+          ...img,
+          group_name: value || `Group ${String.fromCharCode(65 + groupIndex)}`
+        };
+      }
+      return img;
     }));
   };
 
@@ -62,15 +59,6 @@ export default function CreatePage() {
     // Validate group names
     if (groupNames.some(name => !name.trim())) {
       alert("Please name all groups before saving.");
-      return;
-    }
-
-    const groupCounts = {};
-    Object.values(groupAssignments).forEach((group) => {
-      groupCounts[group] = (groupCounts[group] || 0) + 1;
-    });
-    if (Object.values(groupCounts).some((count) => count !== 4)) {
-      alert("Each group must have exactly 4 images.");
       return;
     }
 
@@ -110,15 +98,12 @@ export default function CreatePage() {
 
           const url = supabase.storage.from('puzzle-images').getPublicUrl(filename).data.publicUrl;
           
-          // Get the group name, either from assignments or default
-          const groupName = groupAssignments[img.id] || img.defaultGroup;
-          
           const { error: imageError } = await supabase
             .from('images')
             .insert([{
               puzzle_id: puzzle.id,
               url,
-              group_name: groupName
+              group_name: img.group_name
             }]);
 
           if (imageError) {
@@ -126,7 +111,7 @@ export default function CreatePage() {
             throw new Error(`Failed to create image record: ${imageError.message}`);
           }
           
-          uploaded.push({ url, group: groupName });
+          uploaded.push({ url, group: img.group_name });
         } catch (imgError) {
           console.error('Error processing image:', imgError);
           throw new Error(`Failed to process image: ${imgError.message}`);
@@ -142,14 +127,14 @@ export default function CreatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-gray-800">
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
           Create a Picture Connections Puzzle
         </h1>
 
         {/* Group Names Input */}
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-sm">
+        <div className="mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Name Your Groups</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {groupNames.map((name, index) => (
@@ -171,36 +156,35 @@ export default function CreatePage() {
 
         <div
           {...getRootProps()}
-          className="border-2 border-dashed p-6 rounded-lg mb-6 cursor-pointer bg-white hover:bg-gray-50 transition-colors text-center"
+          className="border-2 border-dashed p-6 rounded-lg mb-6 cursor-pointer bg-white/80 backdrop-blur-sm hover:bg-white/90 transition-colors text-center shadow-lg"
         >
           <input {...getInputProps()} />
-          <p className="text-gray-600">Drag and drop images here, or click to select (16)</p>
+          <p className="text-gray-600">Drag and drop images here, or click to select (up to 16)</p>
+          <p className="text-sm text-gray-500 mt-2">Upload 4 images for each group in order</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {images.map((img) => (
-            <div key={img.id} className="bg-white p-2 rounded-lg shadow-sm">
-              <img src={img.preview} alt="preview" className="w-full h-32 object-cover rounded mb-2" />
-              <select
-                value={groupAssignments[img.id] || img.defaultGroup || ""}
-                onChange={(e) => assignGroup(img.id, e.target.value)}
-                className="w-full p-2 border rounded text-sm"
-              >
-                <option value="">Assign Group</option>
-                {groupNames.map((name, index) => (
-                  <option key={index} value={name || `Group ${String.fromCharCode(65 + index)}`}>
-                    {name || `Group ${String.fromCharCode(65 + index)}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
+          {images.map((img, index) => {
+            const groupIndex = Math.floor(index / 4);
+            const groupName = groupNames[groupIndex] || `Group ${String.fromCharCode(65 + groupIndex)}`;
+            
+            return (
+              <div key={img.id} className="bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-lg">
+                <div className="relative aspect-[3/2] mb-2">
+                  <img src={img.preview} alt="preview" className="w-full h-full object-cover rounded" />
+                  <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                    {groupName}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <button
           onClick={handleSubmit}
           disabled={saving}
-          className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {saving ? "Saving..." : "Save Puzzle & Share"}
         </button>
