@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['supabase.co', 'localhost'],
+    domains: ['dwdstcxmdgmbucjegsng.supabase.co', 'localhost'],
   },
 };
 
